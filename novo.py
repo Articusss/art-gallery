@@ -36,7 +36,8 @@ def earclip(points : list[tuple[int,int]]):
     ears = {i for i in range(len(points)) if check_ear(i, points)}
     to_remove = list(range(len(points)))
     trimmed_polygon = deepcopy(points)
-
+    trimmed_states = []
+    trimmed_states.append(deepcopy(trimmed_polygon))
     triangles = []
     while len(to_remove) > 3:
         #Choose an ear to remove, remove
@@ -50,7 +51,7 @@ def earclip(points : list[tuple[int,int]]):
         #Remove from structures
         to_remove.remove(curr_ear)
         del trimmed_polygon[idx]
-
+        trimmed_states.append(deepcopy(trimmed_polygon))
         #Check if adjacent became ears, since idx was removed next is also idx
         for cand in [(idx - 1) % len(to_remove), idx % len(to_remove)]:
             if check_ear(cand, trimmed_polygon):
@@ -59,7 +60,7 @@ def earclip(points : list[tuple[int,int]]):
                 ears.remove(to_remove[cand])
     #Insert last triangle
     triangles.append(tuple(to_remove))
-    return triangles
+    return triangles, trimmed_states
 
 def dfs_color(graph : list[list[int]], triangles : list[tuple[int,int,int]],
               vertice : int, visited : list[bool], colors : list[int]) -> None:
