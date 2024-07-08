@@ -114,6 +114,7 @@ num_points, points = util.read_file("instances-simple/simple-20-1.pol")
 
 vertice_atual = 0
 triangulo_atual = 0
+is_ear_clip = True
 
 triangulos, estados_cortados = novo.earclip(points)
 graph = util.build_graph_from_triangles(triangulos)
@@ -159,14 +160,17 @@ def update_graph(n_clicks):
     global xs_triangulo
     global ys_triangulo
     global triangulo_atual
+    global is_ear_clip
     fig = go.Figure()
     fig.update_layout(width=2400, height=1200)
     if n_clicks > 0 and vertice_atual < len(estados_cortados) - 1:
-        if n_clicks % 2 == 1:
+        if is_ear_clip:
             animation_get_ear_clip(fig, vertice_atual, estados_cortados)
+            is_ear_clip = False
         else:
             vertice_atual+=1
             animation_new_graph_after_ear_clip(fig, vertice_atual, estados_cortados)
+            is_ear_clip = True
 
         return fig
     elif n_clicks == 0:
@@ -192,22 +196,28 @@ def update_graph_back(n_clicks):
     global xs_triangulo
     global ys_triangulo
     global triangulo_atual
+    global is_ear_clip
     fig = go.Figure()
     fig.update_layout(width=2400, height=1200)
-    if n_clicks > 0 and triangulo_atual > 0:
-        triangulo_atual-=1
-        xs_triangulo.pop()
-        ys_triangulo.pop()
-        animation_colors(fig, xs_triangulo, ys_triangulo, triangulo_atual)
-        return fig
-    elif  vertice_atual > 0:
-        if n_clicks % 2 == 1:
+    if n_clicks > 0:
+        if triangulo_atual > 0:
+            triangulo_atual-=1
+            animation_colors(fig, xs_triangulo, ys_triangulo, triangulo_atual)
+            return fig
+        elif  is_ear_clip and vertice_atual > 0 and len(xs_triangulo) > 0:
+            xs_triangulo.pop()
+            ys_triangulo.pop()
             vertice_atual-=1
-            animation_new_graph_after_ear_clip(fig, vertice_atual, estados_cortados)
-            
+            x_atual = [x[0] for x in estados_cortados[vertice_atual]] + [estados_cortados[vertice_atual][0][0]]
+            y_atual = [x[1] for x in estados_cortados[vertice_atual]] + [estados_cortados[vertice_atual][0][1]]
+            show_main_trace(fig, x_atual, y_atual)
+            show_triangles(fig)
+            is_ear_clip = True
+            return fig  
         else:
             animation_get_ear_clip(fig, vertice_atual, estados_cortados)
-        return fig
+            is_ear_clip = False
+            return fig
     else:
         return inicia_o_grafico()
 
