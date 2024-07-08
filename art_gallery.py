@@ -1,9 +1,14 @@
 import util
 import algo
 import visual
+import argparse
 
 if __name__ == "__main__":
-    num_points, points = util.read_file("instances-simple/simple-20-1.pol")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('input_file', help='Input file')
+    args = parser.parse_args()
+
+    num_points, points = util.read_file(args.input_file)
     #visual.plot_polygon(points)
     triangles = algo.earclip(points)
     graph = util.build_graph_from_triangles(triangles)
