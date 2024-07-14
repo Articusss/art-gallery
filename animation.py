@@ -2,7 +2,7 @@ import dash
 from dash import html, dcc, Input, Output
 import plotly.graph_objects as go
 import util
-import novo
+import algo
 import sys
 class GraphAnimator:
     def __init__(self, file_path):
@@ -14,9 +14,9 @@ class GraphAnimator:
         self.xs_triangulo = []
         self.ys_triangulo = []
         self.num_points, self.points = util.read_file(file_path)
-        self.triangulos, self.estados_cortados = novo.earclip(self.points)
+        self.triangulos, self.estados_cortados = algo.earclip(self.points)
         self.graph = util.build_graph_from_triangles(self.triangulos)
-        self.vertices_cor = novo.tri_color_graph(self.graph, self.triangulos, len(self.points))
+        self.vertices_cor = algo.tri_color_graph(self.graph, self.triangulos, len(self.points))
         self.x_original = self.get_x_vertex(0, self.estados_cortados)
         self.y_original = self.get_y_vertex(0, self.estados_cortados)
 
@@ -127,14 +127,13 @@ class GraphAnimator:
                 self.animation_new_graph_after_ear_clip(fig)
                 self.is_ear_clip = True
             return fig
-        elif n_clicks == 0:
-            return self.inicia_o_grafico()
         elif self.triangulo_atual < len(self.xs_triangulo) - 1:
             fig = go.Figure()
             fig.update_layout(width=2400, height=1200)
             self.triangulo_atual += 1
             self.animation_colors(fig)
             return fig
+        return self.inicia_o_grafico()
         
 
     def update_graph_back(self, n_clicks):
@@ -161,15 +160,14 @@ class GraphAnimator:
                 self.animation_get_ear_clip(fig)
                 self.is_ear_clip = False
                 return fig
-        else:
-            return self.inicia_o_grafico()
+        return self.inicia_o_grafico()
+            
 
 graph_animator = None
 
 app = dash.Dash(__name__)
 
 def create_layout():
-    # Verifica se graph_animator é None antes de tentar acessar seus métodos
     figure = graph_animator.inicia_o_grafico() if graph_animator is not None else {}
     return html.Div([
         dcc.Graph(id='live-graph', figure=figure),
@@ -201,7 +199,6 @@ if __name__ == '__main__':
     else:
         file_path = sys.argv[1]
 
-    # Cria uma instância de GraphAnimator usando o caminho do arquivo fornecido
     graph_animator = GraphAnimator(file_path)
     app.layout = create_layout()
     app.run_server(debug=True)
