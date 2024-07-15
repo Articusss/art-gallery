@@ -64,18 +64,19 @@ class GraphAnimator:
             fig.add_trace(go.Scatter(x=x, y=y, mode="lines", line=dict(width=3)))
 
     def show_current_ear_clip(self, fig, x_atual, y_atual, x_removido, y_removido):
-        if x_removido is None:
+        if x_removido is None or y_removido is None:
             return 
-        indice_anterior, indice_proximo = self.find_adjacent_indices(x_atual, x_removido)
+        pontos_atuais = list(zip(x_atual, y_atual))
+        indice_anterior, indice_proximo = self.find_adjacent_indices(pontos_atuais,(x_removido, y_removido))
         x_traces = [x_atual[indice_anterior], x_removido, x_atual[indice_proximo]]
         y_traces = [y_atual[indice_anterior], y_removido, y_atual[indice_proximo]]
         traces = go.Scatter(x=x_traces, y=y_traces, mode="lines", line=dict(color='red', width=6))
         fig.add_trace(traces)
 
-    def find_adjacent_indices(self, lista, elemento):
-        indice = lista.index(elemento) if elemento is not None else 0
-        indice_anterior = (indice - 1) % len(lista)
-        indice_proximo = (indice + 1) % len(lista)
+    def find_adjacent_indices(self,pontos, ponto):
+        indice = pontos.index(ponto)
+        indice_anterior = (indice - 1) % len(pontos)
+        indice_proximo = (indice + 1) % len(pontos)
         return indice_anterior, indice_proximo
     
     def update_triangles(self, state):
