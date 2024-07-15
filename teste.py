@@ -5,7 +5,6 @@ import util
 import novo
 
 
-
 def inicia_o_grafico():
     fig = go.Figure()
     fig.update_layout(width=2400, height=1200)
@@ -83,17 +82,15 @@ def animation_get_ear_clip(fig, vertice_atual, estados_cortados):
     x_removidos.append(x_removido)
     y_removidos.append(y_removido)
     
-    
     show_triangles(fig)
     show_current_ear_clip(fig, x_atual, y_atual, x_removido, y_removido)
-    # show_removed_vertex(fig, x_removidos, y_removidos)
 
 def animation_new_graph_after_ear_clip(fig, vertice_atual, estados_cortados):
     x_atual = [x[0] for x in estados_cortados[vertice_atual]] + [estados_cortados[vertice_atual][0][0]]
     y_atual = [x[1] for x in estados_cortados[vertice_atual]] + [estados_cortados[vertice_atual][0][1]]
             
     update_triangles(triangulos, vertice_atual)
-    
+
     show_main_trace(fig, x_atual, y_atual)
     show_triangles(fig)
 
@@ -108,9 +105,6 @@ def animation_colors(fig, xs_triangulo, ys_triangulo, triangulo_atual):
     show_colors(fig, xs_triangulo_atual, ys_triangulo_atual)
 
 num_points, points = util.read_file("instances-simple/simple-20-1.pol")
-# Dados de exemplo
-
-
 
 vertice_atual = 0
 triangulo_atual = 0
@@ -133,14 +127,14 @@ y_removidos = []
 xs_triangulo = []
 ys_triangulo = []
 
-# Inicializa o aplicativo Dash
 app = dash.Dash(__name__)
 
-# Layout do aplicativo
 app.layout = html.Div([
     dcc.Graph(id='live-graph', figure=inicia_o_grafico()),
-    html.Button('Play', id='play-button', n_clicks=0),
-    html.Button('Voltar', id='back-button', n_clicks=0),
+      html.Button('Play', id='play-button', n_clicks=0, 
+                style={'fontSize': '20px', 'padding': '10px 24px', 'minWidth': '100px'}),
+    html.Button('Voltar', id='back-button', n_clicks=0, 
+                style={'fontSize': '20px', 'padding': '10px 24px', 'minWidth': '100px'}),
 ])
 
 

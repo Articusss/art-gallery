@@ -171,7 +171,7 @@ def create_layout():
     figure = graph_animator.inicia_o_grafico() if graph_animator is not None else {}
     return html.Div([
         dcc.Graph(id='live-graph', figure=figure),
-         html.Button('Play', id='play-button', n_clicks=0, 
+         html.Button('Avancar', id='play-button', n_clicks=0, 
                 style={'fontSize': '20px', 'padding': '10px 24px', 'minWidth': '100px'}),
     html.Button('Voltar', id='back-button', n_clicks=0, 
                 style={'fontSize': '20px', 'padding': '10px 24px', 'minWidth': '100px'}),
