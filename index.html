@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Problema da Galeria de Arte</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Problema da Galeria de Arte</h1>
+        <p>O problema da galeria de arte é um dos problemas mais conhecidos da geometria computacional. Ele busca responder à seguinte pergunta: dada a planta (vértices de um polígono) de uma galeria de arte, qual é o número mínimo de câmeras com visão de 360º necessárias para vigiar todos os cômodos da galeria?</p>
+        
+        <p>Existem várias versões desse problema. Algumas, como a versão em que a localização das câmeras é restrita aos vértices do polígono, são classificadas como NP-completas. Não abordaremos a demonstração disso aqui.</p>
+        
+        <p>Contudo, podemos observar que um polígono convexo pode ser vigiado por inteiro com uma câmera localizada em um dos seus vértices. Com base no teorema que afirma que todo polígono simples possui pelo menos uma triangulação com n-2 triângulos, podemos chegar a uma solução interessante. Pelo teorema de Chvátal, sabemos que piso de n/3 vértices são sempre suficientes para cobrir todo o polígono. Isso é provado por Fisk, que demonstrou que é possível realizar uma 3-coloração do grafo resultante da triangulação.</p>
+
+        <p>Portanto, para obtermos uma solução aproximada para o problema da galeria de arte, basta triangular o polígono e, em seguida, realizar uma 3-coloração, onde cada cor representa uma distribuição de câmeras suficiente para vigiar toda a galeria.</p>
+        
+        <p>Para obter a triangulação, podemos utilizar o algoritmo de Ear-Clipping (corte de orelhas), que possui complexidade quadrática, embora existam outras implementações mais eficientes que rodam em tempo O(nlog(n)).</p>
+        
+        <p>O algoritmo de Ear-Clipping baseia-se no Teorema das Duas Orelhas, que afirma que todo polígono simples com pelo menos 4 vértices possui pelo menos 2 orelhas (triângulos com dois lados sendo arestas do polígono e um terceiro lado completamente interior ao polígono). O algoritmo consiste em:</p>
+        <ul>
+            <li>Verificar quais vértices formam pontas de orelha (se o caminho entre pi-1, pi e pi+1 forma um giro à esquerda não contendo outros vértices dentro).</li>
+            <li>Remover um vértice ponta de orelha do polígono.</li>
+            <li>Atualizar o status dos vértices ajascentes, se deixaram ou passaram a ser pontas de orelha.</li>
+            <li>Repetir os passos anteriores até que restem apenas 3 vértices no polígono.</li>
+        </ul>
+
+        <pre><code>def earclip(points: list[tuple[int, int]]):
+    # <span class="comment">Calculamos todos os vértices que formam uma ponta de orelha</span>
+    ears = {i for i in range(len(points)) if check_ear(i, points)}
+    to_remove = list(range(len(points)))
+    trimmed_polygon = deepcopy(points)
+
+    triangles = []
+    while len(to_remove) > 3:
+        # <span class="comment">Removemos uma ponta de orelha</span>
+        curr_ear = ears.pop()
+        idx = to_remove.index(curr_ear)
+
+        # <span class="comment">Adicionamos a orelha removida à lista de triângulos</span>
+        n = len(to_remove)
+        triangles.append((to_remove[(idx-1) % n], to_remove[idx], to_remove[(idx+1) % n]))
+
+        # <span class="comment">Removemos a ponta de orelha atual da lista de vértices</span>
+        to_remove.remove(curr_ear)
+        del trimmed_polygon[idx]
+
+        # <span class="comment">Atualizamos o status dos vértices adjacentes</span>
+        for cand in [(idx - 1) % len(to_remove), idx % len(to_remove)]:
+            if check_ear(cand, trimmed_polygon):
+                ears.add(to_remove[cand])
+            elif to_remove[cand] in ears:
+                ears.remove(to_remove[cand])
+
+    # <span class="comment">Adicionamos o triângulo formado pelos três vértices restantes à lista de triângulos</span>
+    triangles.append(tuple(to_remove))
+    return triangles
+
+</code></pre>
+
+    <p>A função auxiliar check_ear utilizada acima, pode ser facilmente implementada utilizando orientação relativa de segmentos de reta:</p>
+
+    <pre><code>def check_ear(idx: int, points: list[tuple[int, int]]) -> bool:
+    # <span class="comment">Checa se o vértice idx é uma ponta de orelha</span>
+    n = len(points)
+    t = [points[(idx-1)%n], points[idx], points[(idx+1)%n]]
+    return signal(t[1], t[2], t[0]) > 0 and not any_point_in_triangle(*t, points)
+
+def signal(p0, p1, p2) -> float:
+    # <span class="comment">Retorna o produto vetorial entre p0p2 e p1p2</span>
+    return (p0[0]-p2[0]) * (p1[1]-p2[1]) - (p1[0]-p2[0]) * (p0[1]-p2[1])
+
+def point_in_triangle(p0: tuple[int, int], p1: tuple[int, int],
+                      p2: tuple[int, int], checked_point: tuple[int, int]) -> bool:
+    # <span class="comment">Checa se o ponto checked_point está dentro do triângulo formado por p0, p1 e p2</span>
+    d1 = signal(checked_point, p0, p1)
+    d2 = signal(checked_point, p1, p2)
+    d3 = signal(checked_point, p2, p0)
+
+    has_neg = d1 < 0 or d2 < 0 or d3 < 0
+    has_pos = d1 > 0 or d2 > 0 or d3 > 0
+
+    return not(has_neg and has_pos)
+
+def any_point_in_triangle(p0: tuple[int, int], p1: tuple[int, int],
+                          p2: tuple[int, int], points: list[tuple[int, int]]) -> bool:
+    # <span class="comment">Checa se algum dos vértices restantes está contido no triângulo formado por p0, p1 e p2</span>
+    for p_check in points:
+        if p_check != p0 and p_check != p1 and p_check != p2 and point_in_triangle(p0, p1, p2, p_check):
+            return True
+    return False
+        </code></pre>
+
+        <p>Podemos então, encontrar uma 3-coloração para a triangulação do polígono da seguinte maneira: iniciamos colorindo um triângulo com uma cor para cada vértice e, em seguida, propagamos as cores pelos demais triângulos utilizando uma busca em profundidade.</p>
+
+        <pre><code>def tri_color_graph(graph: list[list[int]], triangles: list[tuple[int, int, int]],
+                     num_points: int) -> list[int]:
+
+    # <span class="comment">Designamos 0, 1 ou 2 para cada vértice, representando sua cor (-1 significa que não foi colorido ainda)</span>
+    colors = [-1] * num_points
+
+    # <span class="comment">Colorimos o primeiro triângulo</span>
+    v1, v2, v3 = triangles[0]
+    colors[v1] = 0
+    colors[v2] = 1
+
+    # <span class="comment">Fazemos uma busca em profundidade sobre as arestas do grafo</span>
+    visited = [False] * len(graph)
+    dfs_color(graph, triangles, 0, visited, colors)
+
+    return colors
+
+def dfs_color(graph: list[list[int]], triangles: list[tuple[int, int, int]],
+              vertice: int, visited: list[bool], colors: list[int]) -> None:
+
+    # <span class="comment">Marcamos o vértice atual como visitado</span>
+    visited[vertice] = True
+    
+    # <span class="comment">Dois vértices do triângulo atual já devem estar coloridos, então encontramos a cor do próximo</span>
+    curr_colors = [colors[v] for v in triangles[vertice]]
+    remaining_color = ({0,1,2,-1} - set(curr_colors)).pop() 
+    colors[triangles[vertice][curr_colors.index(-1)]] = remaining_color 
+
+    # <span class="comment">Visitamos os vértices adjacentes</span>
+    for neighbor in graph[vertice]:
+        if not visited[neighbor]: 
+            dfs_color(graph, triangles, neighbor, visited, colors)
+
+        </code></pre>
+
+        <p>Abaixo, você encontra uma animação exemplificando a execução desse problema, que poderá ajudar na visualização e compreensão dos passos descritos.</p>
+
+        <div id="graph"></div>
+        <button id="play-button">Avançar</button>
+        <button id="back-button">Voltar</button>
+        
+        <script src="script.js"></script>
+    
+        <h4>Referências</h4>
+        <ul>
+            <li>Capítulo 1 (Computational Geometry in C. Joseph O’Rourke. 2nd Edition. Cambridge University Press)</li>
+            <li>Seções 5.1, 5.2, 5.4, 5.5 (Computational Geometry in C. Joseph O’Rourke. 2nd Edition. Cambridge University Press)</li>
+            <li>Seção 3.1 (Computational Geometry: Algorithms and Applications. M. de Berg, O. Cheong, M. van Kreveld, M. Overmars. 3rd
+                Edition. Springer)</li>
+            <li>Slides da disciplina Algoritmos II do professor Renato Vimieiro</li>
+            <li><a href="https://en.wikipedia.org/wiki/Art_gallery_problem" target="_blank">https://en.wikipedia.org/wiki/Art_gallery_problem</a></li>
+            <li><a href="https://en.wikipedia.org/wiki/Polygon_triangulation" target="_blank">https://en.wikipedia.org/wiki/Polygon_triangulation</a></li>
+        </ul>
+
+        <h4>Equipe</h4>
+        <p>Este projeto foi realizado pelos seguintes alunos da disciplina Algoritmos II:</p>
+        <ul>
+            <li>André Alves de Souza Barros</li>
+            <li>Ramiro Noronha Reis Ribeiro</li>
+            <li>Vinicius Leite Censi Faria</li>
+        </ul>
+    </div>
+</body>
+</html>
