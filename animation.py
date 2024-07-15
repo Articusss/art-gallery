@@ -71,7 +71,7 @@ class GraphAnimator:
         fig.add_trace(traces)
 
     def find_adjacent_indices(self, lista, elemento):
-        indice = lista.index(elemento)
+        indice = lista.index(elemento) if elemento is not None else 0
         indice_anterior = (indice - 1) % len(lista)
         indice_proximo = (indice + 1) % len(lista)
         return indice_anterior, indice_proximo
