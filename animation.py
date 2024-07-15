@@ -64,6 +64,8 @@ class GraphAnimator:
             fig.add_trace(go.Scatter(x=x, y=y, mode="lines", line=dict(width=3)))
 
     def show_current_ear_clip(self, fig, x_atual, y_atual, x_removido, y_removido):
+        if x_removido is None:
+            return 
         indice_anterior, indice_proximo = self.find_adjacent_indices(x_atual, x_removido)
         x_traces = [x_atual[indice_anterior], x_removido, x_atual[indice_proximo]]
         y_traces = [y_atual[indice_anterior], y_removido, y_atual[indice_proximo]]
@@ -98,13 +100,18 @@ class GraphAnimator:
             return 'blue'
         elif indice_cor == 1:
             return 'red'
-        return 'green'
+        elif indice_cor == 2:
+            return 'green'
+        return 'black'
+
+    def get_index(self, x,y):
+        return self.points.index((x,y))
 
     def show_removed_vertex(self, fig, x_removed, y_removed):
         for x,y in zip(x_removed, y_removed):
-            color_indice = self.vertices_cor[self.x_original.index(x)]
+            color_indice = self.vertices_cor[self.get_index(x,y)]
             fig.add_trace(go.Scatter(x=[x], y=[y], mode="markers", marker=dict(color=self.cor_vertice(color_indice), size=20))) 
-
+    
     def show_colors(self, fig, x_triangles, y_triangles):
         for xs_triangle, ys_triangle in zip(x_triangles, y_triangles):
             self.show_removed_vertex(fig, xs_triangle, ys_triangle)
@@ -193,9 +200,11 @@ def update_graph_back(n_clicks):
     return graph_animator.update_graph_back(n_clicks)
 
 if __name__ == '__main__':
+
     if len(sys.argv) != 2:
+        file_path = "instances-other\StSerninH.pol"
         print("Necessário caminho do arquivo. Comando correto: python animation.py <caminho_do_arquivo>")
-        sys.exit(1)
+        #ssys.exit(1)
     else:
         file_path = sys.argv[1]
 
